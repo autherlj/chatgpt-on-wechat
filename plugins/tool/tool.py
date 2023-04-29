@@ -32,7 +32,7 @@ class Tool(Plugin):
         logger.info("[tool] inited")
 
     def get_help_text(self, verbose=False, **kwargs):
-        help_text = "这是一个能让chatgpt联网，搜索，数字运算的插件，将赋予强大且丰富的扩展能力。"
+        help_text = "这是一个能让chatgpt联网，搜索，数字运算的插件，将赋予强大且丰富的扩展能力。例如：输入&tool 今日早报"
         trigger_prefix = conf().get("plugin_trigger_prefix", "$")
         if not verbose:
             return help_text
