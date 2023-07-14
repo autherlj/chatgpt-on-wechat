@@ -5,7 +5,8 @@ import time
 import openai
 import openai.error
 import requests
-
+import mysql.connector
+from datetime import datetime
 from bot.bot import Bot
 from bot.chatgpt.chat_gpt_session import ChatGPTSession
 from bot.openai.open_ai_image import OpenAIImage
@@ -84,6 +85,16 @@ class ChatGPTBot(Bot, OpenAIImage):
                     reply_content["completion_tokens"],
                 )
             )
+            # 调用 insert_usage_records 方法将使用记录插入数据库
+            context_type = str(ContextType.TEXT)
+            model = conf().get("model")
+            completion_tokens = reply_content["completion_tokens"]
+            session_id = session_id
+            try:
+                self.insert_usage_records(context_type, model, completion_tokens, session_id)
+            except Exception as e:
+                logger.error("Error occurred while inserting usage records: {}".format(str(e)))
+            logger.info(f"微信用户的OPENID: {session_id},这次对话消耗的OPENAI的Token: {reply_content['completion_tokens']}")
             if reply_content["completion_tokens"] == 0 and len(reply_content["content"]) > 0:
                 reply = Reply(ReplyType.ERROR, reply_content["content"])
             elif reply_content["completion_tokens"] > 0:
@@ -160,7 +171,29 @@ class ChatGPTBot(Bot, OpenAIImage):
                 return self.reply_text(session, api_key, args, retry_count + 1)
             else:
                 return result
+    def insert_usage_records(self, contextType, model, completion_tokens, session_id):
+        # Connect to the database
+        cnx = mysql.connector.connect(user='root', password='mysql@123',
+                                      host='127.0.0.1',
+                                      database='myaccount')
 
+        cursor = cnx.cursor()
+
+        # Create insert statement
+        add_usage_record = ("INSERT INTO usage_records "
+                           "(usage_time, type, model, token_length, openid) "
+                           "VALUES (%s, %s, %s, %s, %s)")
+
+        # Insert new usage record
+        data_usage_record = (datetime.now(), contextType, model, completion_tokens, session_id)
+        cursor.execute(add_usage_record, data_usage_record)
+
+        # Commit the changes
+        cnx.commit()
+
+        # Close cursor and connection
+        cursor.close()
+        cnx.close()
 
 class AzureChatGPTBot(ChatGPTBot):
     def __init__(self):
