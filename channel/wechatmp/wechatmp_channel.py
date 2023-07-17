@@ -19,6 +19,7 @@ from channel.wechatmp.common import *
 from channel.wechatmp.wechatmp_client import WechatMPClient
 from common.log import logger
 from common.singleton import singleton
+from common.db_manager import DatabaseManager
 from common.utils import split_string_by_utf8_length
 from config import conf
 from voice.audio_convert import any_to_mp3, split_audio
@@ -221,6 +222,16 @@ class WechatMPChannel(ChatChannel):
                     logger.error("[wechatmp] upload image failed: {}".format(e))
                     return
                 self.client.message.send_image(receiver, response["media_id"])
+                try:
+                    # 调用 insert_usage_records 方法将使用记录插入数据库
+                    context_type = str(ContextType.IMAGE)
+                    model = "plugin-sdwebui"
+                    completion_tokens = "500"
+                    session_id = receiver
+                    DatabaseManager().insert_usage_record(context_type, model, completion_tokens, session_id)
+                except Exception as e:
+                    logger.error("Error occurred while inserting usage records: {}".format(str(e)))
+                logger.info("[wechatmp] Do usage_record image to {}".format(receiver))    
                 logger.info("[wechatmp] Do send image to {}".format(receiver))
         return
 

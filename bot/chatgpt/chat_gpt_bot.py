@@ -15,7 +15,9 @@ from bridge.context import ContextType
 from bridge.reply import Reply, ReplyType
 from common.log import logger
 from common.token_bucket import TokenBucket
+from common.db_manager import DatabaseManager
 from config import conf, load_config
+from channel.wechatmp.wechatmp_channel import WechatMPChannel
 
 
 # OpenAI对话模型API (可用)
@@ -75,7 +77,17 @@ class ChatGPTBot(Bot, OpenAIImage):
             # if context.get('stream'):
             #     # reply in stream
             #     return self.reply_text_stream(query, new_query, session_id)
-
+            logger.info(DatabaseManager().check_usage_status(session_id))
+            if not DatabaseManager().check_usage_status(session_id):
+                article = {
+                    'title': '账户充值',
+                    'description': 'Token余额不足请充值',
+                    'url': 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxa31121df217466fd&redirect_uri=http://bot.jungeclub.club/myaccount&response_type=code&scope=snsapi_userinfo&state=STATE&connect_redirect=1#wechat_redirect',
+                    'image': ''
+                }
+                reply = WechatMPChannel().client.message.send_link(session_id, article)
+                logger.info("[wechatmp] Do send linkurl to {}".format(session_id))
+                return
             reply_content = self.reply_text(session, api_key, args=new_args)
             logger.debug(
                 "[CHATGPT] new_query={}, session_id={}, reply_cont={}, completion_tokens={}".format(
@@ -91,7 +103,7 @@ class ChatGPTBot(Bot, OpenAIImage):
             completion_tokens = reply_content["completion_tokens"]
             session_id = session_id
             try:
-                self.insert_usage_records(context_type, model, completion_tokens, session_id)
+                DatabaseManager().insert_usage_record(context_type, model, completion_tokens, session_id)
             except Exception as e:
                 logger.error("Error occurred while inserting usage records: {}".format(str(e)))
             logger.info(f"微信用户的OPENID: {session_id},这次对话消耗的OPENAI的Token: {reply_content['completion_tokens']}")
@@ -172,29 +184,6 @@ class ChatGPTBot(Bot, OpenAIImage):
                 return self.reply_text(session, api_key, args, retry_count + 1)
             else:
                 return result
-    def insert_usage_records(self, contextType, model, completion_tokens, session_id):
-        # Connect to the database
-        cnx = mysql.connector.connect(user='root', password='mysql@123',
-                                      host='127.0.0.1',
-                                      database='myaccount')
-
-        cursor = cnx.cursor()
-
-        # Create insert statement
-        add_usage_record = ("INSERT INTO usage_records "
-                           "(usage_time, type, model, token_length, openid) "
-                           "VALUES (%s, %s, %s, %s, %s)")
-
-        # Insert new usage record
-        data_usage_record = (datetime.now(), contextType, model, completion_tokens, session_id)
-        cursor.execute(add_usage_record, data_usage_record)
-
-        # Commit the changes
-        cnx.commit()
-
-        # Close cursor and connection
-        cursor.close()
-        cnx.close()
 
 class AzureChatGPTBot(ChatGPTBot):
     def __init__(self):
