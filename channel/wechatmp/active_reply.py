@@ -11,7 +11,7 @@ from channel.wechatmp.wechatmp_channel import WechatMPChannel
 from channel.wechatmp.wechatmp_message import WeChatMPMessage
 from common.log import logger
 from config import conf, subscribe_msg
-
+from common.db_manager import DatabaseManager
 
 # This class is instantiated once per query
 class Query:
@@ -62,6 +62,19 @@ class Query:
                 logger.info("[wechatmp] Event {} from {}".format(msg.event, msg.source))
                 if msg.event in ["subscribe", "subscribe_scan"]:
                     reply_text = subscribe_msg()
+                    # 当用户关注的时候将用户openid插入到数据库中 start
+                    logger.info(f"Inserting subscribe user into db {msg.source}")
+                    try:
+                        DatabaseManager().insert_user_balance(msg.source)
+                        logger.info(f"Inserting openid {msg.source} into user_balance ")
+                    except Exception as e:
+                        logger.error(f"Error while inserting user balance for {msg.source} into database: {e}")
+                    try:
+                        DatabaseManager().insert_user_status(msg.source)
+                        logger.info(f"Inserting openid {msg.source} into user_status ")
+                    except Exception as e:
+                         logger.error(f"Error while inserting user status for {msg.source} into database: {e}")
+                    # 当用户关注的时候将用户openid插入到数据库中 end
                     if reply_text:
                         replyPost = create_reply(reply_text, msg)
                         return encrypt_func(replyPost.render())
