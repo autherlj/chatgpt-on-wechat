@@ -1,13 +1,16 @@
 import mysql.connector
-from mysql.connector import pooling
+
 from datetime import datetime
+
 
 class Singleton(type):
     _instances = {}
+
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
+
 
 class DatabaseManager(metaclass=Singleton):
     def __init__(self, host='127.0.0.1', database='myaccount', user='root', password='mysql@123', pool_size=5):
@@ -27,8 +30,8 @@ class DatabaseManager(metaclass=Singleton):
 
         # Create insert statement
         add_usage_record = ("INSERT INTO usage_records "
-                           "(usage_time, type, model, token_length, openid) "
-                           "VALUES (%s, %s, %s, %s, %s)")
+                            "(usage_time, type, model, token_length, openid) "
+                            "VALUES (%s, %s, %s, %s, %s)")
 
         # Insert new usage record
         data_usage_record = (datetime.now(), contextType, model, completion_tokens, session_id)

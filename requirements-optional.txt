@@ -40,3 +40,8 @@ dingtalk_stream
 
 # zhipuai
 zhipuai>=2.0.1
+--extra-index-url https://pypi.python.org/simple
+chatgpt_tool_hub==0.4.6
+
+# install mysql-connector
+mysql-connector

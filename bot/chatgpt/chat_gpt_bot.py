@@ -77,6 +77,7 @@ class ChatGPTBot(Bot, OpenAIImage):
             # if context.get('stream'):
             #     # reply in stream
             #     return self.reply_text_stream(query, new_query, session_id)
+            # 调用 check_usage_status 方法检查当前用户是否有额度使用oepnapi对话 start
             logger.info(DatabaseManager().check_usage_status(session_id))
             if not DatabaseManager().check_usage_status(session_id):
                 article = {
@@ -88,6 +89,7 @@ class ChatGPTBot(Bot, OpenAIImage):
                 reply = WechatMPChannel().client.message.send_link(session_id, article)
                 logger.info("[wechatmp] Do send linkurl to {}".format(session_id))
                 return
+            # 调用 check_usage_status 方法检查当前用户是否有额度使用oepnapi对话 end 
             reply_content = self.reply_text(session, api_key, args=new_args)
             logger.debug(
                 "[CHATGPT] new_query={}, session_id={}, reply_cont={}, completion_tokens={}".format(
@@ -97,7 +99,7 @@ class ChatGPTBot(Bot, OpenAIImage):
                     reply_content["completion_tokens"],
                 )
             )
-            # 调用 insert_usage_records 方法将使用记录插入数据库
+            # 调用 insert_usage_records 方法将使用记录插入数据库 start
             context_type = str(ContextType.TEXT)
             model = conf().get("model")
             completion_tokens = reply_content["completion_tokens"]
@@ -107,6 +109,7 @@ class ChatGPTBot(Bot, OpenAIImage):
             except Exception as e:
                 logger.error("Error occurred while inserting usage records: {}".format(str(e)))
             logger.info(f"微信用户的OPENID: {session_id},这次对话消耗的OPENAI的Token: {reply_content['completion_tokens']}")
+            # 调用 insert_usage_records 方法将使用记录插入数据库 end
             if reply_content["completion_tokens"] == 0 and len(reply_content["content"]) > 0:
                 reply = Reply(ReplyType.ERROR, reply_content["content"])
             elif reply_content["completion_tokens"] > 0:
