@@ -1,7 +1,6 @@
 import mysql.connector
-
 from datetime import datetime
-
+from mysql.connector import pooling
 
 class Singleton(type):
     _instances = {}

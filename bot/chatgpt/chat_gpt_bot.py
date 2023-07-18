@@ -5,8 +5,6 @@ import time
 import openai
 import openai.error
 import requests
-import mysql.connector
-from datetime import datetime
 from bot.bot import Bot
 from bot.chatgpt.chat_gpt_session import ChatGPTSession
 from bot.openai.open_ai_image import OpenAIImage
