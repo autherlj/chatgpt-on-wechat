@@ -220,7 +220,7 @@ class WechatMPChannel(ChatChannel):
                 try:
                     context_type = str(ContextType.IMAGE)
                     model = "plugin-sdwebui"
-                    completion_tokens = "500"
+                    completion_tokens = "3000"
                     session_id = receiver
                     DatabaseManager().insert_usage_record(context_type, model, completion_tokens, session_id)
                 except Exception as e:
