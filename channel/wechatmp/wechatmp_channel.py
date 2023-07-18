@@ -101,7 +101,6 @@ class WechatMPChannel(ChatChannel):
                 media_id = response["media_id"]
                 logger.info("[wechatmp] voice uploaded, receiver {}, media_id {}".format(receiver, media_id))
                 self.cache_dict[receiver] = ("voice", media_id)
-
             elif reply.type == ReplyType.IMAGE_URL:  # 从网络下载图片
                 img_url = reply.content
                 pic_res = requests.get(img_url, stream=True)
@@ -201,9 +200,24 @@ class WechatMPChannel(ChatChannel):
                 except WeChatClientException as e:
                     logger.error("[wechatmp] upload image failed: {}".format(e))
                     return
+
+                # 调用 check_usage_status 方法检查当前用户是否有额度使用oepnapi对话 start
+                logger.info(DatabaseManager().check_usage_status(receiver))
+                if not DatabaseManager().check_usage_status(receiver):
+                    article = {
+                        'title': '账户充值',
+                        'description': 'Token余额不足请充值',
+                        'url': 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxa31121df217466fd&redirect_uri=http://bot.jungeclub.club/myaccount&response_type=code&scope=snsapi_userinfo&state=STATE&connect_redirect=1#wechat_redirect',
+                        'image': ''
+                    }
+                    reply = WechatMPChannel().client.message.send_link(receiver, article)
+                    logger.info("[wechatmp] Do send linkurl to {}".format(receiver))
+                    return
+                # 调用 check_usage_status 方法检查当前用户是否有额度使用oepnapi对话 end 
+                
                 self.client.message.send_image(receiver, response["media_id"])
+                # 调用 insert_usage_records 方法将使用记录插入数据库 start
                 try:
-                    # 调用 insert_usage_records 方法将使用记录插入数据库
                     context_type = str(ContextType.IMAGE)
                     model = "plugin-sdwebui"
                     completion_tokens = "500"
@@ -211,6 +225,7 @@ class WechatMPChannel(ChatChannel):
                     DatabaseManager().insert_usage_record(context_type, model, completion_tokens, session_id)
                 except Exception as e:
                     logger.error("Error occurred while inserting usage records: {}".format(str(e)))
+                # 调用 insert_usage_records 方法将使用记录插入数据库 end
                 logger.info("[wechatmp] Do usage_record image to {}".format(receiver))    
                 logger.info("[wechatmp] Do send image to {}".format(receiver))
         return
