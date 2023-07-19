@@ -5,8 +5,6 @@ import time
 import openai
 import openai.error
 import requests
-import mysql.connector
-from datetime import datetime
 from bot.bot import Bot
 from bot.chatgpt.chat_gpt_session import ChatGPTSession
 from bot.openai.open_ai_image import OpenAIImage
@@ -110,6 +108,12 @@ class ChatGPTBot(Bot, OpenAIImage):
                 logger.error("Error occurred while inserting usage records: {}".format(str(e)))
             logger.info(f"微信用户的OPENID: {session_id},这次对话消耗的OPENAI的Token: {reply_content['completion_tokens']}")
             # 调用 insert_usage_records 方法将使用记录插入数据库 end
+            # 调用 deduct_balance 方法进行计费 start
+            try:
+                DatabaseManager().deduct_balance(session_id,completion_tokens)
+            except Exception as e:
+                logger.error("Error occurred while deduct_balance: {}".format(str(e)))
+            # 调用 deduct_balance 方法进行计费 end
             if reply_content["completion_tokens"] == 0 and len(reply_content["content"]) > 0:
                 reply = Reply(ReplyType.ERROR, reply_content["content"])
             elif reply_content["completion_tokens"] > 0:

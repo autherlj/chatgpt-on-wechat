@@ -7,8 +7,6 @@ import threading
 import time
 
 import requests
-import web
-from wechatpy.crypto import WeChatCrypto
 from wechatpy.exceptions import WeChatClientException
 from collections import defaultdict
 
@@ -238,6 +236,10 @@ class WechatMPChannel(ChatChannel):
                 
                 self.client.message.send_image(receiver, response["media_id"])
                 # 调用 insert_usage_records 方法将使用记录插入数据库 start
+                context_type = str(ContextType.IMAGE)
+                model = "plugin-sdwebui"
+                completion_tokens = "3000"
+                session_id = receiver
                 try:
                     context_type = str(ContextType.IMAGE)
                     model = "plugin-sdwebui"
@@ -247,6 +249,12 @@ class WechatMPChannel(ChatChannel):
                 except Exception as e:
                     logger.error("Error occurred while inserting usage records: {}".format(str(e)))
                 # 调用 insert_usage_records 方法将使用记录插入数据库 end
+                # 调用 deduct_balance 方法进行计费 start
+                try:
+                    DatabaseManager().deduct_balance(session_id, completion_tokens)
+                except Exception as e:
+                    logger.error("Error occurred while deduct_balance: {}".format(str(e)))
+                # 调用 deduct_balance 方法进行计费 end
                 logger.info("[wechatmp] Do usage_record image to {}".format(receiver))    
                 logger.info("[wechatmp] Do send image to {}".format(receiver))
         return
