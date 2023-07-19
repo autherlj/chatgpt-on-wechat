@@ -52,7 +52,7 @@ class DatabaseManager(metaclass=Singleton):
         cursor = cnx.cursor()
 
         # Create insert statement
-        add_openid = "INSERT IGNORE  INTO user_balance (openid, balance) VALUES (%s, 6000)"
+        add_openid = "INSERT IGNORE  INTO user_balance (openid, balance) VALUES (%s, 100000)"
 
         # Insert new openid
         data_openid = (openid,)
