@@ -1,9 +1,8 @@
-import logging
 
 import mysql.connector
 from mysql.connector import pooling
 from datetime import datetime
-
+from common.log import logger
 
 class Singleton(type):
     _instances = {}
@@ -120,13 +119,13 @@ class DatabaseManager(metaclass=Singleton):
             cursor.execute(sql_get_balance, (openid,))
             result = cursor.fetchone()
             if result is None:
-                logging.info(f"Openid {openid} not found in user_balance.")
+                logger.info(f"Openid {openid} not found in user_balance.")
                 return
             current_balance = result[0]
 
             new_balance = current_balance - token_length
             if new_balance < 0:
-                logging.info(f"Insufficient balance for openid {openid}.")
+                logger.info(f"Insufficient balance for openid {openid}.")
                 self.update_usage_status(openid,0)
                 return
 
@@ -134,10 +133,10 @@ class DatabaseManager(metaclass=Singleton):
             cursor.execute(sql_update_balance, (new_balance, openid))
 
             cnx.commit()
-            logging.info(f"Deducted {token_length} from openid {openid}. New balance: {new_balance}")
+            logger.info(f"Deducted {token_length} from openid {openid}. New balance: {new_balance}")
         except Exception as e:
             cnx.rollback()
-            logging.info(f"Failed to deduct balance for openid {openid}. Error: {e}")
+            logger.info(f"Failed to deduct balance for openid {openid}. Error: {e}")
         finally:
             cursor.close()
     def update_usage_status(self, openid,status):
