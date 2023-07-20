@@ -25,6 +25,9 @@ def job():
         if not getter.next_openid:
             logger.info("No more openids")
             break  # stop if there are no more openids
+            db_manager.insert_user_balance_and_status(openid)
+    else:
+        logger.info("No more openids")
     logger.info("Job finished")
 
 # Schedule the job every hour
