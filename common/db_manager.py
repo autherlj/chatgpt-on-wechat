@@ -15,7 +15,7 @@ class Singleton(type):
 
 
 class DatabaseManager(metaclass=Singleton):
-    def __init__(self, host='127.0.0.1', database='myaccount', user='root', password='mysql@123', pool_size=50):
+    def __init__(self, host='127.0.0.1', database='myaccount', user='root', password='mysql@123', pool_size=25):
         dbconfig = {
             "host": host,
             "user": user,
