@@ -17,8 +17,7 @@ def job():
     if not openids:
         for openid in openids:
             logger.info(f"Inserting openid {openid}")
-            db_manager.insert_user_balance(openid)
-            db_manager.insert_user_status(openid)
+            db_manager.insert_user_balance_and_status(openid)
     else:
         logger.info("No more openids")
     logger.info("Job finished")

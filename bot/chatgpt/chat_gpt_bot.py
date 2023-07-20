@@ -76,15 +76,17 @@ class ChatGPTBot(Bot, OpenAIImage):
             #     # reply in stream
             #     return self.reply_text_stream(query, new_query, session_id)
             # 调用 check_usage_status 方法检查当前用户是否有额度使用oepnapi对话 start
-            logger.info(DatabaseManager().check_usage_status(session_id))
-            if not DatabaseManager().check_usage_status(session_id):
+
+            usage_status = DatabaseManager().check_usage_status(session_id)
+            logger.info("[wechatmp] 用户当前额度状态 {}".format(usage_status))
+            if not usage_status:
                 article = {
                     'title': '账户充值',
                     'description': 'Token余额不足请充值',
                     'url': 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxa31121df217466fd&redirect_uri=http://bot.jungeclub.club/myaccount&response_type=code&scope=snsapi_userinfo&state=STATE&connect_redirect=1#wechat_redirect',
                     'image': ''
                 }
-                reply = WechatMPChannel().client.message.send_link(session_id, article)
+                WechatMPChannel().client.message.send_link(session_id, article)
                 logger.info("[wechatmp] Do send linkurl to {}".format(session_id))
                 return
             # 调用 check_usage_status 方法检查当前用户是否有额度使用oepnapi对话 end 
@@ -97,23 +99,18 @@ class ChatGPTBot(Bot, OpenAIImage):
                     reply_content["completion_tokens"],
                 )
             )
-            # 调用 insert_usage_records 方法将使用记录插入数据库 start
+            # 调用 deduct_balance 方法进行计费 并插入流水到usage_records表 start
             context_type = str(ContextType.TEXT)
             model = conf().get("model")
             completion_tokens = reply_content["completion_tokens"]
             session_id = session_id
             try:
-                DatabaseManager().insert_usage_record(context_type, model, completion_tokens, session_id)
-            except Exception as e:
-                logger.error("Error occurred while inserting usage records: {}".format(str(e)))
-            logger.info(f"微信用户的OPENID: {session_id},这次对话消耗的OPENAI的Token: {reply_content['completion_tokens']}")
-            # 调用 insert_usage_records 方法将使用记录插入数据库 end
-            # 调用 deduct_balance 方法进行计费 start
-            try:
-                DatabaseManager().deduct_balance(session_id,completion_tokens)
+                DatabaseManager().deduct_balance(context_type,model,session_id,completion_tokens)
             except Exception as e:
                 logger.error("Error occurred while deduct_balance: {}".format(str(e)))
-            # 调用 deduct_balance 方法进行计费 end
+            logger.info(
+                f"微信用户的OPENID: {session_id},这次对话消耗的OPENAI的Token: {reply_content['completion_tokens']}")
+            # 调用 deduct_balance 方法进行计费 并插入流水到usage_records表 end
             if reply_content["completion_tokens"] == 0 and len(reply_content["content"]) > 0:
                 reply = Reply(ReplyType.ERROR, reply_content["content"])
             elif reply_content["completion_tokens"] > 0:
