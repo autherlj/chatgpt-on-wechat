@@ -83,7 +83,7 @@ class ChatGPTBot(Bot, OpenAIImage):
                 article = {
                     'title': '账户充值',
                     'description': 'Token余额不足请充值',
-                    'url': 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxa31121df217466fd&redirect_uri=http://bot.jungeclub.club/myaccount&response_type=code&scope=snsapi_userinfo&state=STATE&connect_redirect=1#wechat_redirect',
+                    'url': 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxa31121df217466fd&redirect_uri=https://bot.jungeclub.club/myaccount&response_type=code&scope=snsapi_userinfo&state=STATE&connect_redirect=1#wechat_redirect',
                     'image': ''
                 }
                 WechatMPChannel().client.message.send_link(session_id, article)
