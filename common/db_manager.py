@@ -105,7 +105,7 @@ class DatabaseManager(metaclass=Singleton):
             new_balance = current_balance - token_length
             if new_balance < 0:
                 logger.info(f"Insufficient balance for openid {openid}.")
-                sql = "UPDATE usage_status SET user_status = %s WHERE openid = %s"
+                sql = "UPDATE user_status SET usage_status = %s WHERE openid = %s"
                 cursor.execute(sql, (0, openid))
             else:
                 sql_update_balance = "UPDATE user_balance SET balance=%s WHERE openid=%s"
