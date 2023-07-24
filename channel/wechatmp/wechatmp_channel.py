@@ -218,7 +218,7 @@ class WechatMPChannel(ChatChannel):
                 # 调用 deduct_balance 方法进行计费 并插入流水到usage_records表 start
                 context_type = str(ContextType.IMAGE)
                 model = "plugin-sdwebui"
-                completion_tokens = 3000
+                completion_tokens = 600
                 session_id = receiver
                 try:
                     DatabaseManager().deduct_balance(context_type,model,session_id,completion_tokens)
