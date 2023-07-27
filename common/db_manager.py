@@ -32,7 +32,7 @@ class DatabaseManager(metaclass=Singleton):
 
         try:
             # Create insert statement for user_balance
-            add_openid_balance = "INSERT IGNORE INTO user_balance (openid, balance) VALUES (%s, 100000)"
+            add_openid_balance = "INSERT IGNORE INTO user_balance (openid, balance) VALUES (%s, 10000)"
 
             # Insert new openid to user_balance
             data_openid_balance = (openid,)
