@@ -82,7 +82,7 @@ class ChatGPTBot(Bot, OpenAIImage):
             if not usage_status:
                 article = {
                     'title': '账户充值',
-                    'description': 'Token余额不足请充值',
+                    'description': '积分余额不足请充值',
                     'url': 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxa31121df217466fd&redirect_uri=https://bot.jungeclub.club/api/myaccount&response_type=code&scope=snsapi_userinfo&state=STATE&connect_redirect=1#wechat_redirect',
                     'image': 'https://img.ixintu.com/download/jpg/20201104/2bc5e313f68a5d67476ce25486ada9f7_512_455.jpg!con'
                 }
