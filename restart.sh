@@ -7,7 +7,9 @@ process_id=$(ps -ef | grep "python3 app.py" | grep -v "grep" | awk '{print $2}')
 if [ ! -z "$process_id" ]; then
     echo "Stopping app.py with process ID: $process_id"
     kill -15 "$process_id"
-    sleep 2
+    while kill -0 "$process_id" 2> /dev/null; do
+        sleep 1
+    done
 else
     echo "No app.py process found."
 fi
