@@ -122,7 +122,33 @@ class ChatGPTBot(Bot, OpenAIImage):
             return reply
 
         elif context.type == ContextType.IMAGE_CREATE:
+            # 调用 check_usage_status 方法检查当前用户是否有额度使用oepnapi对话 start
+            session_id = context["session_id"]
+            usage_status = DatabaseManager().check_usage_status(session_id)
+            logger.info("[wechatmp] 用户当前额度状态 {}".format(usage_status))
+            if not usage_status:
+                article = {
+                    'title': '账户充值',
+                    'description': '积分余额不足请充值',
+                    'url': 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxa31121df217466fd&redirect_uri=https://bot.jungeclub.club/api/myaccount&response_type=code&scope=snsapi_userinfo&state=STATE&connect_redirect=1#wechat_redirect',
+                    'image': 'https://img.ixintu.com/download/jpg/20201104/2bc5e313f68a5d67476ce25486ada9f7_512_455.jpg!con'
+                }
+                WechatMPChannel().client.message.send_link(session_id, article)
+                logger.info("[wechatmp] Do send linkurl to {}".format(session_id))
+                return
+            # 调用 check_usage_status 方法检查当前用户是否有额度使用oepnapi对话 end
             ok, retstring = self.create_img(query, 0)
+            # 调用 deduct_balance 方法进行计费 并插入流水到usage_records表 start
+            context_type = str(ContextType.IMAGE)
+            model = "DALL·E 3"
+            completion_tokens = 3000
+            session_id = session_id
+            try:
+                DatabaseManager().deduct_balance(context_type, model, session_id, completion_tokens)
+            except Exception as e:
+                logger.error("Error occurred while deduct_balance: {}".format(str(e)))
+            # 调用 deduct_balance 方法进行计费 并插入流水到usage_records表 end
+            logger.info("[wechatmp] Do usage_record image to {}".format(session_id))
             reply = None
             if ok:
                 reply = Reply(ReplyType.IMAGE_URL, retstring)
