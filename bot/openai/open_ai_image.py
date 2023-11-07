@@ -20,7 +20,7 @@ class OpenAIImage(object):
             if conf().get("rate_limit_dalle") and not self.tb4dalle.get_token():
                 return False, "请求太快了，请休息一下再问我吧"
             logger.info("[OPEN_AI] image_query={}".format(query))
-            response = openai.Image.generate(
+            response = openai.Image.create(
                 api_key=api_key,
                 prompt=query,  # 图片描述
                 n=1,  # 每次生成图片的数量
